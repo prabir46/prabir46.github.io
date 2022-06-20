@@ -20,6 +20,7 @@ export class BookSeatsComponent implements OnInit {
   total: number = 0;
   booked: number = 0;
   rem!: any ;
+  status!:any;
   bookings : any[] = [];
 
   ngOnInit(): void {
@@ -60,7 +61,14 @@ export class BookSeatsComponent implements OnInit {
       this.hideMessage();
       return;
     }
-    const [bookedSeats, rem] = this.dbSrv.bookSeats(seatsToBook);
+    const [bookedSeats, rem, status] = this.dbSrv.bookSeats(seatsToBook);
+    console.log(bookedSeats,rem);
+    this.status=status
+    if(this.status ==false){
+      this.message = "Unable to assign seats as they are not nearby or not in the same row";
+      this.hideMessage();
+      return;
+    }
     this.rem = rem;
     this.bookings.unshift({
       time: Date.now(),

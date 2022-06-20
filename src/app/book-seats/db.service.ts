@@ -21,9 +21,9 @@ export class DbService {
   constructor() {}
   private dataStore: DATASTORE = {
     seatChart: [
-      { row: 1, booked: 2, max: 7, start: 1, booked_seats: [1, 2] },
-      { row: 2, booked: 1, max: 7, start: 8, booked_seats: [11] },
-      { row: 3, booked: 3, max: 7, start: 15, booked_seats: [15, 16, 17] },
+      { row: 1, booked: 0, max: 7, start: 1, booked_seats: [] },
+      { row: 2, booked: 0, max: 7, start: 8, booked_seats: [] },
+      { row: 3, booked: 0, max: 7, start: 15, booked_seats: [] },
       { row: 4, booked: 0, max: 7, start: 22, booked_seats: [] },
       { row: 5, booked: 0, max: 7, start: 29, booked_seats: [] },
       { row: 6, booked: 0, max: 7, start: 36, booked_seats: [] },
@@ -35,8 +35,8 @@ export class DbService {
       { row: 12, booked: 0, max: 3, start: 78, booked_seats: [] }
     ],
     total: 80,
-    booked: 6,
-    rem: 74
+    booked: 0,
+    rem: 80
   };
   private _data = new BehaviorSubject<DATASTORE>(this.dataStore);
 
@@ -45,28 +45,69 @@ export class DbService {
   }
 
   bookSeats(seatsToBook: number) {
+    console.log(seatsToBook);
     let rem = seatsToBook;
     let bookedSeats = [];
+    // for(){
+    //   console.log(this.dataStore.seatChart[i]);
+    // }
+    let status=false;
+    main: for (let i=0;i<this.dataStore.seatChart.length;i++) {
+      let row=this.dataStore.seatChart[i];
 
-    main: for (let row of this.dataStore.seatChart) {
       if (rem === 0) break main;
-      const rowBookings = Math.min(row.max - row.booked, rem);
-      rem -= rowBookings;
-      row.booked += rowBookings;
-      const bs = row.booked_seats;
-      let count = 0;
-      inner: for (let i = row.start; i <= row.start + row.max; i++) {
-        if (count === rowBookings) break inner;
-        const alreadyBooked = bs.some(n => n === i);
-        if (!alreadyBooked) {
-          count++;
-          bs.push(i);
-          bookedSeats.push(i);
+      if(row.max - row.booked<rem) {
+        continue;
+      }else if(row.max - row.booked>=rem){
+        const rowBookings = Math.min(row.max - row.booked, rem);
+        console.log(rem,rowBookings);
+        rem -= rowBookings;
+        console.log(rem,rowBookings);
+        row.booked += rowBookings;
+        const bs = row.booked_seats;
+        let count = 0;
+        inner: for (let i = row.start; i <= row.start + row.max; i++) {
+          if (count === rowBookings) break inner;
+          const alreadyBooked = bs.some(n => n === i);
+          if (!alreadyBooked) {
+            count++;
+            bs.push(i);
+            bookedSeats.push(i);
+          }
         }
+        status=true;
+      }else{
+        const rowBookings = Math.min(row.max - row.booked, rem);
+        console.log(rem,rowBookings);
+        rem -= rowBookings;
+        console.log(rem,rowBookings);
+        row.booked += rowBookings;
+        const bs = row.booked_seats;
+        let count = 0;
+        inner: for (let i = row.start; i <= row.start + row.max; i++) {
+          if (count === rowBookings) break inner;
+          const alreadyBooked = bs.some(n => n === i);
+          if (!alreadyBooked) {
+            count++;
+            bs.push(i);
+            bookedSeats.push(i);
+          }
+        }
+        status=true;
       }
+
     }
-    this.dataStore.booked += seatsToBook;
-    this.dataStore.rem -= seatsToBook;
-    return [bookedSeats, this.dataStore.rem];
+
+    console.log(status);
+
+    if(status==true){
+      this.dataStore.booked += seatsToBook;
+      this.dataStore.rem -= seatsToBook;
+    }else{
+      //this.dataStore.booked += seatsToBook;
+      //this.dataStore.rem = seatsToBook;
+    }
+
+    return [bookedSeats, this.dataStore.rem, status];
   }
 }
